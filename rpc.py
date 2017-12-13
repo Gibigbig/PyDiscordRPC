@@ -45,7 +45,7 @@ class DiscordRPC:
             reader_protocol = asyncio.StreamReaderProtocol(self.sock_reader, loop=self.loop)
             self.sock_writer, _ = await self.loop.create_pipe_connection(lambda: reader_protocol, self.ipc_path)
 
-        self.send_data(0, {'v': 1, 'client_id': '352253827933667338'})
+        self.send_data(0, {'v': 1, 'client_id': self.client_id})
         data = await self.sock_reader.read(1024)
         code, length = struct.unpack('<ii', data[:8])
         print(f'OP Code: {code}; Length: {length}\nResponse:\n{json.loads(data[8:].decode("utf-8"))}\n')
@@ -56,27 +56,28 @@ class DiscordRPC:
             'cmd': 'SET_ACTIVITY',
             'args': {
                 'activity': {
-                    'state': 'am sad',
-                    'details': ':(',
-                    'timestamps': {
-                        'start': int(current_time),
-                        'end': int(current_time) + (5 * 60)
-                    },
+                    'state': self.state,
+                    'details': self.details,
+                    #'timestamps': {
+                    #    'start': int(current_time),
+                    #    'end': int(current_time) + (5 * 60)
+                    #},
                     'assets': {
-                        'large_text': '>tfw no gf',
-                        'large_image': 'feels',
-                        'small_text': 'that\'s me',
-                        'small_image': 'gio'
+                        'large_text': self.large_text,
+                        'large_image': self.asset_large_image,
+                        'small_text': self.small_text,
+                        'small_image': self.asset_small_image
                     },
-                    'party': {
-                        'id': '4chan',
-                        'size': [21, 42]  # [Minimum, Maximum]
-                    },
-                    'secrets': {
-                        'match': 'install_gentoo',
-                        'join': 'communism_is_bad',
-                        'spectate': 'b0nzybuddy',
-                    },
+                    #'party': {
+                    #   'id': '4chan',
+                    #    'size': [21, 42]  # [Minimum, Maximum]
+                    #}
+                    #,
+                    #'secrets': {
+                    #   'match': 'install_gentoo',
+                    #   'join': 'communism_is_bad',
+                    #   'spectate': 'b0nzybuddy',
+                    #},
                     'instance': True
                 },
                 'pid': os.getpid()
@@ -86,6 +87,13 @@ class DiscordRPC:
         self.send_data(1, payload)
 
     async def run(self):
+        self.client_id = input("Client ID: ")
+        self.state = input("State: ")
+        self.details = input("Details: ")
+        self.large_text = input("Large text: ")
+        self.asset_large_image = input("Large Asset Image Name: ")
+        self.small_text = input("Small Text: ")
+        self.asset_small_image = input("Small Asset Image Name: ")
         await self.handshake()
         self.send_rich_presence()
         await self.read_output()
